@@ -8,6 +8,7 @@ import (
 	"os"
 )
 
+// TODO: rename OpenImagePNG
 func OpenImage(path string) (image.Image, error) {
 	file, err := os.Open(path)
 	if err != nil {

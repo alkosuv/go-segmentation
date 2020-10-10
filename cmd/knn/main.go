@@ -9,7 +9,7 @@ import (
 
 func main() {
 	var (
-		pathOpen = flag.String("open", "", "path to image open")
+		pathOpen = flag.String("open", "", "path to file with dataset")
 		pathSave = flag.String("save", "", "path to image save")
 	)
 	flag.Parse()
