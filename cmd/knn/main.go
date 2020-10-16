@@ -29,6 +29,11 @@ func init() {
 	logger = log.New(file, "", log.LstdFlags)
 }
 
+// TODO: Реализовать сравнение пикселей с набором данных
+// TODO: Отсортировать результаты сравнения
+// TODO: Выбрать 1000 наименьших значений и посчитать количество регионов
+// TODO: Назначить label
+// TODO: Раскрасить отсегментированное изображение
 func main() {
 	s := storage.NewStorage(logger)
 	if err := s.Read(*pathLabel); err != nil {
