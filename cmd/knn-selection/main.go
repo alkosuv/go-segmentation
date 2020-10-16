@@ -18,6 +18,7 @@ var (
 	pathImages = flag.String("pathImages", "", "path to image")
 	pathLabels = flag.String("pathLabels", "", "path to classified image")
 	splits     = flag.String("splits", "", "path to dataset")
+	pathSave   = flag.String("save", "", "save path to dataset")
 	pathLog    = flag.String("log", "tmp/knn_selection.log", "path to log file")
 	logger     *log.Logger
 )
@@ -34,16 +35,12 @@ func init() {
 }
 
 func main() {
-	var (
-		s storage.Storages
-	)
+	s := storage.NewStorage(logger)
 
 	images, err := openDataset()
 	if err != nil {
 		logger.Fatalln(err)
 	}
-
-	fmt.Println(len(images))
 
 	for _, name := range images {
 		pathImg := fmt.Sprintf("%s/%s", *pathImages, name)
@@ -84,10 +81,9 @@ func main() {
 		}
 	}
 
-	fmt.Println(len(s))
-	// for _, v := range s {
-	// 	fmt.Println(v.RGBA, v.Index)
-	// }
+	if err := s.Save(*pathSave); err != nil {
+		logger.Println(err)
+	}
 }
 
 func openDataset() ([]string, error) {

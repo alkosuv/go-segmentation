@@ -1,14 +1,69 @@
 package storage
 
-import "image/color"
+import (
+	"bufio"
+	"image/color"
+	"io"
+	"log"
+	"os"
+)
 
 type Storage struct {
-	RGBA  color.RGBA
-	Index int
+	Labels []Label
+	logger *log.Logger
 }
 
-type Storages []Storage
+func NewStorage(logger *log.Logger) *Storage {
+	s := new(Storage)
+	s.logger = logger
+	return s
+}
 
-func (s *Storages) Add(rgba color.RGBA, index int) {
-	*s = append(*s, Storage{rgba, index})
+func (s *Storage) Add(rgba color.RGBA, index int) {
+	s.Labels = append(s.Labels, Label{rgba, index})
+}
+
+func (s *Storage) Save(name string) error {
+	file, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		s.logger.Println(err)
+		return err
+	}
+	defer file.Close()
+
+	for _, l := range s.Labels {
+		if _, err := file.WriteString(l.String()); err != nil {
+			s.logger.Println(err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Storage) Read(name string) error {
+	file, err := os.OpenFile(name, os.O_RDONLY, 0644)
+	if err != nil {
+		s.logger.Println(err)
+		return err
+	}
+
+	reader := bufio.NewReader(file)
+	for {
+		str, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			s.logger.Println(err)
+		}
+
+		l, err := NewLabel(str)
+		if err != nil {
+			s.logger.Println(err)
+		}
+
+		s.Labels = append(s.Labels, *l)
+	}
+
+	return nil
 }
