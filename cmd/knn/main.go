@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"urban-image-segmentation/internal/gil"
@@ -11,9 +10,9 @@ import (
 )
 
 var (
-	pathOpen  = flag.String("open", "", "path to file with dataset")
-	pathSave  = flag.String("save", "", "path to image save")
-	pathLabel = flag.String("label", "dataset/knn_dataset/labels.csv", "path to labels knn")
+	pathOpen  = flag.String("open", "dataset/images/00_000200.png", "path to file with dataset")
+	pathSave  = flag.String("save", "save/img.png", "path to image save")
+	pathLabel = flag.String("label", "dataset/knn-dataset/labels.csv", "path to labels knn")
 	pathLog   = flag.String("log", "tmp/knn.log", "path to log file")
 	logger    *log.Logger
 )
@@ -29,6 +28,7 @@ func init() {
 	logger = log.New(file, "", log.LstdFlags)
 }
 
+// TODO: Написать пакет для работы с файлами и деректориями
 // TODO: Реализовать сравнение пикселей с набором данных
 // TODO: Отсортировать результаты сравнения
 // TODO: Выбрать 1000 наименьших значений и посчитать количество регионов
@@ -40,14 +40,12 @@ func main() {
 		logger.Fatalln(err)
 	}
 
-	fmt.Println(s.Labels)
-
 	img, err := gil.OpenImage(*pathOpen)
 	if err != nil {
 		logger.Fatalln(err)
 	}
 
-	knn := knn.NewKNN(img)
+	knn := knn.NewKNN(img, &s.Labels)
 	newImg, _ := knn.Predict()
 
 	if err := gil.SaveImage(*pathSave, newImg); err != nil {

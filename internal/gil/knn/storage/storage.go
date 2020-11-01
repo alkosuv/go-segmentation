@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"urban-image-segmentation/internal/gil/sys"
 )
 
 type Storage struct {
@@ -20,11 +21,12 @@ func NewStorage(logger *log.Logger) *Storage {
 }
 
 func (s *Storage) Add(rgba color.RGBA, index int) {
-	s.Labels = append(s.Labels, Label{rgba, index})
+	l := Label{rgba, index}
+	s.Labels = append(s.Labels, l)
 }
 
 func (s *Storage) Save(name string) error {
-	file, err := os.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := sys.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
 		s.logger.Println(err)
 		return err

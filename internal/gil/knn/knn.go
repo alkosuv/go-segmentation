@@ -6,23 +6,26 @@ import (
 	"image/color"
 	"math"
 	"urban-image-segmentation/internal/gil/grayscale"
+	"urban-image-segmentation/internal/gil/knn/storage"
 )
 
 type KNN struct {
-	img    image.Image
-	width  int
-	height int
+	img        image.Image
+	width      int
+	height     int
+	setOfClass *[]storage.Label
 
 	distMatrix [][]float64
 	region     [][]uint8
 }
 
-func NewKNN(img image.Image) *KNN {
+func NewKNN(img image.Image, setOfClass *[]storage.Label) *KNN {
 	k := new(KNN)
 
 	k.width = img.Bounds().Max.X
 	k.height = img.Bounds().Max.Y
 	k.img = grayscale.RGBA2GRAY(img)
+	k.setOfClass = setOfClass
 
 	k.distMatrix = make([][]float64, k.width)
 	for i := range k.distMatrix {

@@ -1,5 +1,5 @@
 knn:
-	go build -o bin/knn cmd/knn/main.go ;
+	go build -o bin/knn cmd/knn/main.go;
 
 knn-start:
 	make knn;
@@ -14,4 +14,4 @@ knn-selection-start:
 		--pathImages="dataset/images" \
 		--pathLabels="dataset/labels" \
 		--splits="dataset/splits_knn/train.txt" \
-		--save="dataset/knn_dataset/labels.csv";
+		--save="dataset/knn-dataset/labels.csv";
