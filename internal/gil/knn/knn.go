@@ -5,119 +5,116 @@ import (
 	"image"
 	"image/color"
 	"math"
+	"sort"
+	"sync"
+	"time"
+	"urban-image-segmentation/internal/dataset/label"
+	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/grayscale"
 	"urban-image-segmentation/internal/gil/knn/storage"
 )
 
 type KNN struct {
-	img        image.Image
-	width      int
-	height     int
-	setOfClass *[]storage.Label
-
-	distMatrix [][]float64
-	region     [][]uint8
+	img    image.Image
+	width  int
+	height int
+	labels *[]storage.Label
 }
 
-func NewKNN(img image.Image, setOfClass *[]storage.Label) *KNN {
+type DistanceLabel struct {
+	dist  float64
+	index int
+}
+
+func NewKNN(img image.Image, labels *[]storage.Label) *KNN {
 	k := new(KNN)
 
 	k.width = img.Bounds().Max.X
 	k.height = img.Bounds().Max.Y
 	k.img = grayscale.RGBA2GRAY(img)
-	k.setOfClass = setOfClass
-
-	k.distMatrix = make([][]float64, k.width)
-	for i := range k.distMatrix {
-		k.distMatrix[i] = make([]float64, k.height)
-	}
-
-	k.region = make([][]uint8, k.width)
-	for i := range k.region {
-		k.region[i] = make([]uint8, k.width)
-	}
+	k.labels = labels
 
 	return k
 }
 
 func (k *KNN) Predict() (image.Image, error) {
-	// newImg := gil.NewImage(k.width, k.height)
+	newImg := gil.NewImage(k.width, k.height)
+	var wg sync.WaitGroup
 
-	k.evaluationOfDistance()
-	k.distributionByRegion()
+	start := time.Now()
 
-	return k.img, nil
-}
+	for x := 0; x < k.width/8; x++ {
+		for y := 0; y < k.height/4; {
 
-func (k *KNN) evaluationOfDistance() {
-	for i := 0; i < k.width; i++ {
-		for j := 0; j < k.height; j++ {
-			k.distMatrix[i][j] = 65025
-			for l := 0; l < k.height; l++ {
-				pxl1 := k.RGBA32toRGBA8(k.img.At(i, j))
-				pxl2 := k.RGBA32toRGBA8(k.img.At(i, l))
-
-				dist := k.distance(pxl1, pxl2)
-				if dist < k.distMatrix[i][j] && j != l {
-					k.distMatrix[i][j] = dist
-				}
+			count := 8
+			if k.height-x < count {
+				count = (k.width - x) % count
 			}
+
+			wg.Add(count)
+			for c := 0; c < count; c++ {
+				go func(wgx, wgy int) {
+					defer wg.Done()
+
+					p := k.RGBA32toRGBA8(k.img.At(wgx, wgy))
+					distance := k.evolutionOfDistance(p)
+					sort.Slice(*distance, func(i, j int) bool { return (*distance)[i].dist < (*distance)[j].dist })
+					*distance = (*distance)[:1000]
+					l := k.freqLabels(distance)
+					newImg.(*image.RGBA).Set(wgx, wgy, label.Color[l])
+				}(x, y)
+
+				y++
+			}
+
+			wg.Wait()
 		}
 	}
+
+	fmt.Println(time.Since(start))
+	return newImg, nil
+}
+
+func (k *KNN) freqLabels(d *[]DistanceLabel) int {
+	freq := make([]int, len(label.Labels))
+
+	for _, d := range *d {
+		freq[d.index]++
+	}
+
+	index := 0
+	for i, v := range freq {
+		if v > freq[index] {
+			index = i
+		}
+	}
+
+	return index
+}
+
+func (k *KNN) evolutionOfDistance(point color.RGBA) *[]DistanceLabel {
+	distance := make([]DistanceLabel, 0, len(*k.labels))
+
+	for _, l := range *k.labels {
+		d := DistanceLabel{
+			dist:  k.distance(point, l.RGBA),
+			index: l.Index,
+		}
+		distance = append(distance, d)
+	}
+	return &distance
 }
 
 func (k *KNN) distance(point1, point2 color.RGBA) float64 {
-	return math.Sqrt(math.Pow(float64(point1.R)-float64(point2.R), 2))
+	r := float64(point1.R - point2.R)
+	g := float64(point1.G - point2.G)
+	b := float64(point1.B - point2.B)
+
+	return math.Sqrt(math.Pow(r, 2) + math.Pow(g, 2) + math.Pow(b, 2))
 }
 
-func (k *KNN) minMax() (min float64, max float64) {
-	min = 255.0
-	max = -1.0
-	for i := 0; i < k.width; i++ {
-		for j := 0; j < k.height; j++ {
-			if min > k.distMatrix[i][j] {
-				min = k.distMatrix[i][j]
-			}
-			if max < k.distMatrix[i][j] {
-				max = k.distMatrix[i][j]
-			}
-		}
-	}
-
-	return
-}
-
+// TODO: Написать
 func (k *KNN) distributionByRegion() {
-	min, max := k.minMax()
-
-	test1 := make(map[float64]int)
-	test2 := make(map[uint32]int)
-
-	step := (max - min) / 16.0
-	for i := 0; i < k.width; i++ {
-		for j := 0; j < k.height; j++ {
-			test1[k.distMatrix[i][j]]++
-			r, _, _, _ := k.img.At(i, j).RGBA()
-			test2[r>>8]++
-
-			var n uint8 = 0
-			for l := min; l < max; l += step {
-				if k.distMatrix[i][j] <= l {
-					k.region[i][j] = n
-				}
-				n++
-			}
-		}
-	}
-
-	fmt.Println(len(test1))
-	fmt.Println(len(test2))
-}
-
-// dp - decimal places
-func (k *KNN) round(x float64, dp int) float64 {
-	pow := math.Pow10(dp)
-	return math.Round(x*pow) / pow
 }
 
 func (k *KNN) RGBA32toRGBA8(pixel color.Color) color.RGBA {
