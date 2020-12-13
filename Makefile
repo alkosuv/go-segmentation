@@ -15,3 +15,11 @@ knn-selection-start:
 		--pathLabels="dataset/labels" \
 		--splits="dataset/splits_knn/train_test.txt" \
 		--save="dataset/knn-dataset/labels.csv";
+
+kmeans:
+	go build -o bin/kmeans cmd/kmeans/main.go;
+
+kmeans-start:
+	make kmeans;
+	# bin/kmeans -open=dataset/images/00_000200.png -save=save/img.png 1>tmp/log.log;
+	bin/kmeans -open=dataset/images/00_000200.png 1>tmp/log.log;
