@@ -3,17 +3,25 @@ knn:
 
 knn-start:
 	make knn;
-	bin/knn -open=save/test.png -save=save/img.png 1>tmp/log.log;
+	bin/knn -open=dataset/images/00_000200.png -save=save/img.png 1>tmp/log.log;
 
 knn-selection:
 	go build -o bin/knn-selection cmd/knn-selection/main.go;
+
+knn-selection-test:
+	make knn-selection;
+	bin/knn-selection \
+		--pathImages="dataset/images" \
+		--pathLabels="dataset/labels" \
+		--splits="dataset/splits_knn/train_test.txt" \
+		--save="dataset/knn-dataset/labels.csv";
 
 knn-selection-start:
 	make knn-selection;
 	bin/knn-selection \
 		--pathImages="dataset/images" \
 		--pathLabels="dataset/labels" \
-		--splits="dataset/splits_knn/train_test.txt" \
+		--splits="dataset/splits_knn/train.txt" \
 		--save="dataset/knn-dataset/labels.csv";
 
 kmeans:

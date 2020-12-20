@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"math"
 	"sort"
 	"sync"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/grayscale"
 	"urban-image-segmentation/internal/gil/knn/storage"
+	"urban-image-segmentation/internal/gil/math"
 )
 
 type KNN struct {
@@ -21,7 +21,7 @@ type KNN struct {
 	labels *[]storage.Label
 }
 
-type DistanceLabel struct {
+type distanceLabel struct {
 	dist  float64
 	index int
 }
@@ -43,12 +43,12 @@ func (k *KNN) Predict() (image.Image, error) {
 
 	start := time.Now()
 
-	for x := 0; x < k.width/8; x++ {
-		for y := 0; y < k.height/4; {
+	for x := 0; x < k.width; x++ {
+		for y := 0; y < k.height; {
 
-			count := 8
-			if k.height-x < count {
-				count = (k.width - x) % count
+			count := 12
+			if k.height-y < count {
+				count = k.height - y
 			}
 
 			wg.Add(count)
@@ -75,7 +75,7 @@ func (k *KNN) Predict() (image.Image, error) {
 	return newImg, nil
 }
 
-func (k *KNN) freqLabels(d *[]DistanceLabel) int {
+func (k *KNN) freqLabels(d *[]distanceLabel) int {
 	freq := make([]int, len(label.Labels))
 
 	for _, d := range *d {
@@ -92,29 +92,17 @@ func (k *KNN) freqLabels(d *[]DistanceLabel) int {
 	return index
 }
 
-func (k *KNN) evolutionOfDistance(point color.RGBA) *[]DistanceLabel {
-	distance := make([]DistanceLabel, 0, len(*k.labels))
+func (k *KNN) evolutionOfDistance(point color.RGBA) *[]distanceLabel {
+	distance := make([]distanceLabel, 0, len(*k.labels))
 
 	for _, l := range *k.labels {
-		d := DistanceLabel{
-			dist:  k.distance(point, l.RGBA),
+		d := distanceLabel{
+			dist:  math.EuclideanDistance(point, l.RGBA),
 			index: l.Index,
 		}
 		distance = append(distance, d)
 	}
 	return &distance
-}
-
-func (k *KNN) distance(point1, point2 color.RGBA) float64 {
-	r := float64(point1.R - point2.R)
-	g := float64(point1.G - point2.G)
-	b := float64(point1.B - point2.B)
-
-	return math.Sqrt(math.Pow(r, 2) + math.Pow(g, 2) + math.Pow(b, 2))
-}
-
-// TODO: Написать
-func (k *KNN) distributionByRegion() {
 }
 
 func (k *KNN) RGBA32toRGBA8(pixel color.Color) color.RGBA {

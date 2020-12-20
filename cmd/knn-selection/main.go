@@ -58,6 +58,7 @@ func main() {
 			return
 		}
 
+		lblCount := make([]int, 16)
 		for i := 0; i < img.Bounds().Max.X; i++ {
 			for j := 0; j < img.Bounds().Max.Y; j++ {
 				imgR, imgG, imgB, imgA := img.At(i, j).RGBA()
@@ -76,9 +77,14 @@ func main() {
 					uint8(lblA >> 8),
 				}
 
-				s.Add(imgRGBA, label.Labels[lblRGBA])
+				l := label.Labels[lblRGBA]
+				if lblCount[l] < 250 {
+					s.Add(imgRGBA, l)
+					lblCount[l]++
+				}
 			}
 		}
+		fmt.Printf("%+v\n", lblCount)
 	}
 
 	if err := s.Save(*pathSave); err != nil {
