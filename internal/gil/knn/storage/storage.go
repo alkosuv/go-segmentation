@@ -4,17 +4,18 @@ import (
 	"bufio"
 	"image/color"
 	"io"
-	"log"
 	"os"
 	"urban-image-segmentation/internal/gil/sys"
+
+	"github.com/gen95mis/golog"
 )
 
 type Storage struct {
 	Labels []Label
-	logger *log.Logger
+	logger *golog.Logger
 }
 
-func NewStorage(logger *log.Logger) *Storage {
+func NewStorage(logger *golog.Logger) *Storage {
 	s := new(Storage)
 	s.logger = logger
 	return s
@@ -28,14 +29,14 @@ func (s *Storage) Add(rgba color.RGBA, index int) {
 func (s *Storage) Save(name string) error {
 	file, err := sys.OpenFile(name, os.O_CREATE|os.O_WRONLY, 0755)
 	if err != nil {
-		s.logger.Println(err)
+		s.logger.Errorln(err)
 		return err
 	}
 	defer file.Close()
 
 	for _, l := range s.Labels {
 		if _, err := file.WriteString(l.String()); err != nil {
-			s.logger.Println(err)
+			s.logger.Errorln(err)
 		}
 	}
 
@@ -45,7 +46,7 @@ func (s *Storage) Save(name string) error {
 func (s *Storage) Read(name string) error {
 	file, err := os.OpenFile(name, os.O_RDONLY, 0644)
 	if err != nil {
-		s.logger.Println(err)
+		s.logger.Errorln(err)
 		return err
 	}
 
@@ -56,12 +57,12 @@ func (s *Storage) Read(name string) error {
 			if err == io.EOF {
 				break
 			}
-			s.logger.Println(err)
+			s.logger.Errorln(err)
 		}
 
 		l, err := NewLabel(str)
 		if err != nil {
-			s.logger.Println(err)
+			s.logger.Errorln(err)
 		}
 
 		s.Labels = append(s.Labels, *l)

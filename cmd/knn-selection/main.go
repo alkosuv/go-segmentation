@@ -12,6 +12,8 @@ import (
 	"urban-image-segmentation/internal/dataset/label"
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/knn/storage"
+
+	"github.com/gen95mis/golog"
 )
 
 var (
@@ -20,7 +22,8 @@ var (
 	splits     = flag.String("splits", "", "path to dataset")
 	pathSave   = flag.String("save", "", "save path to dataset")
 	pathLog    = flag.String("log", "tmp/knn_selection.log", "path to log file")
-	logger     *log.Logger
+	lvl        = flag.String("lvl", "Warn", "log level")
+	logger     *golog.Logger
 )
 
 func init() {
@@ -31,7 +34,10 @@ func init() {
 		log.Fatal(err)
 	}
 
-	logger = log.New(file, "", log.LstdFlags)
+	logger, err = golog.NewLogger(file, "", *lvl, log.LstdFlags)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
@@ -48,13 +54,13 @@ func main() {
 
 		img, err := gil.OpenImage(pathImg)
 		if err != nil {
-			logger.Println(err)
+			logger.Errorln(err)
 			return
 		}
 
 		lbl, err := gil.OpenImage(pathLbl)
 		if err != nil {
-			logger.Println(err)
+			logger.Errorln(err)
 			return
 		}
 
@@ -88,7 +94,7 @@ func main() {
 	}
 
 	if err := s.Save(*pathSave); err != nil {
-		logger.Println(err)
+		logger.Errorln(err)
 	}
 }
 

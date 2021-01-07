@@ -6,14 +6,17 @@ import (
 	"os"
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/kmeans"
+
+	"github.com/gen95mis/golog"
 )
 
 var (
 	pathOpen = flag.String("open", "dataset/images/00_000200.png", "path to file with dataset")
 	// pathSave = flag.String("save", "save/img.png", "path to image save")
 	pathLog = flag.String("log", "tmp/kmeans.log", "path to log file")
+	lvl     = flag.String("lvl", "Warn", "log level")
 	logPath *os.File
-	logger  *log.Logger
+	logger  *golog.Logger
 )
 
 func init() {
@@ -26,7 +29,10 @@ func init() {
 		log.Fatalln(err)
 	}
 
-	logger = log.New(logPath, "", log.LstdFlags)
+	logger, err = golog.NewLogger(logPath, "", *lvl, log.LstdFlags)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func main() {

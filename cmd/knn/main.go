@@ -7,6 +7,8 @@ import (
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/knn"
 	"urban-image-segmentation/internal/gil/knn/storage"
+
+	"github.com/gen95mis/golog"
 )
 
 var (
@@ -14,7 +16,8 @@ var (
 	pathSave  = flag.String("save", "save/img.png", "path to image save")
 	pathLabel = flag.String("label", "dataset/knn-dataset/labels.csv", "path to labels knn")
 	pathLog   = flag.String("log", "tmp/knn.log", "path to log file")
-	logger    *log.Logger
+	lvl       = flag.String("lvl", "Warn", "log level")
+	logger    *golog.Logger
 )
 
 func init() {
@@ -25,7 +28,10 @@ func init() {
 		log.Fatalln(err)
 	}
 
-	logger = log.New(file, "", log.LstdFlags)
+	logger, err = golog.NewLogger(file, "", *lvl, log.LstdFlags)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // TODO: Раскрасить отсегментированное изображение
