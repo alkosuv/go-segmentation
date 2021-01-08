@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"log"
 	"os"
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/knn"
@@ -25,12 +24,12 @@ func init() {
 
 	file, err := os.OpenFile(*pathLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatalln(err)
+		golog.Fatalln(err)
 	}
 
-	logger, err = golog.NewLogger(file, "", *lvl, log.LstdFlags)
+	logger, err = golog.NewLogger(file, "", *lvl, golog.LstdFlags)
 	if err != nil {
-		log.Fatal(err)
+		golog.Fatal(err)
 	}
 }
 

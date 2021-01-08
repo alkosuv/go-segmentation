@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"image/color"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"urban-image-segmentation/internal/dataset/label"
@@ -31,12 +30,12 @@ func init() {
 
 	file, err := os.OpenFile(*pathLog, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatal(err)
+		golog.Fatal(err)
 	}
 
-	logger, err = golog.NewLogger(file, "", *lvl, log.LstdFlags)
+	logger, err = golog.NewLogger(file, "", *lvl, golog.LstdFlags)
 	if err != nil {
-		log.Fatal(err)
+		golog.Fatal(err)
 	}
 }
 
