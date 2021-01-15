@@ -11,11 +11,11 @@ import (
 
 var (
 	pathOpen = flag.String("open", "dataset/images/00_000200.png", "path to file with dataset")
-	// pathSave = flag.String("save", "save/img.png", "path to image save")
-	pathLog = flag.String("log", "tmp/kmeans.log", "path to log file")
-	lvl     = flag.String("lvl", "Warn", "log level")
-	logPath *os.File
-	logger  *golog.Logger
+	pathSave = flag.String("save", "save/img.png", "path to image save")
+	pathLog  = flag.String("log", "tmp/kmeans.log", "path to log file")
+	lvl      = flag.String("lvl", "Warn", "log level")
+	logPath  *os.File
+	logger   *golog.Logger
 )
 
 func init() {
@@ -46,5 +46,9 @@ func main() {
 	if _, err := kmeans.Predict(); err != nil {
 		logger.Fatalln(err)
 	}
+	newImg, _ := kmeans.Predict()
 
+	if err := gil.SaveImage(*pathSave, newImg); err != nil {
+		logger.Fatalln(err)
+	}
 }

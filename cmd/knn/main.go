@@ -33,7 +33,6 @@ func init() {
 	}
 }
 
-// TODO: Раскрасить отсегментированное изображение
 func main() {
 	s := storage.NewStorage(logger)
 	if err := s.Read(*pathLabel); err != nil {

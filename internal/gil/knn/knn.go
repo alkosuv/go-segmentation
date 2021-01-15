@@ -9,7 +9,7 @@ import (
 	"time"
 	"urban-image-segmentation/internal/dataset/label"
 	"urban-image-segmentation/internal/gil"
-	"urban-image-segmentation/internal/gil/grayscale"
+	"urban-image-segmentation/internal/gil/convert"
 	"urban-image-segmentation/internal/gil/knn/storage"
 	"urban-image-segmentation/internal/gil/math"
 )
@@ -31,7 +31,7 @@ func NewKNN(img image.Image, labels *[]storage.Label) *KNN {
 
 	k.width = img.Bounds().Max.X
 	k.height = img.Bounds().Max.Y
-	k.img = grayscale.RGBA2GRAY(img)
+	k.img = img
 	k.labels = labels
 
 	return k
@@ -56,7 +56,7 @@ func (k *KNN) Predict() (image.Image, error) {
 				go func(wgx, wgy int) {
 					defer wg.Done()
 
-					p := k.RGBA32toRGBA8(k.img.At(wgx, wgy))
+					p := convert.RGBA32toRGBA8(k.img.At(wgx, wgy))
 					distance := k.evolutionOfDistance(p)
 					sort.Slice(*distance, func(i, j int) bool { return (*distance)[i].dist < (*distance)[j].dist })
 					*distance = (*distance)[:1000]
@@ -103,17 +103,4 @@ func (k *KNN) evolutionOfDistance(point color.RGBA) *[]distanceLabel {
 		distance = append(distance, d)
 	}
 	return &distance
-}
-
-func (k *KNN) RGBA32toRGBA8(pixel color.Color) color.RGBA {
-	r, g, b, a := pixel.RGBA()
-
-	var c color.RGBA
-
-	c.R = uint8(r >> 8)
-	c.G = uint8(g >> 8)
-	c.B = uint8(b >> 8)
-	c.A = uint8(a >> 8)
-
-	return c
 }

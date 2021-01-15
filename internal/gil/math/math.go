@@ -13,3 +13,15 @@ func EuclideanDistance(point1, point2 color.RGBA) float64 {
 
 	return math.Sqrt(math.Pow(r, 2) + math.Pow(g, 2) + math.Pow(b, 2))
 }
+
+func SliceIndexMin(s []float64) int {
+	index := 0
+
+	for i := 1; i < len(s); i++ {
+		if s[index] > s[i] {
+			index = i
+		}
+	}
+
+	return index
+}

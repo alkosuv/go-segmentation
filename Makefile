@@ -29,5 +29,5 @@ kmeans:
 
 kmeans-start:
 	make kmeans;
-	# bin/kmeans -open=dataset/images/00_000200.png -save=save/img.png 1>tmp/log.log;
-	bin/kmeans -open=dataset/images/00_000200.png 1>tmp/log.log;
+	bin/kmeans -open=dataset/images/00_000200.png -save=save/img.png 1>tmp/log.log;
+	# bin/kmeans -open=dataset/images/00_000200.png 1>tmp/log.log;

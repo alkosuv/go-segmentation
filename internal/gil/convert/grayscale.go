@@ -1,4 +1,4 @@
-package grayscale
+package convert
 
 import (
 	"image"
@@ -6,7 +6,7 @@ import (
 	"urban-image-segmentation/internal/gil"
 )
 
-func RGBA2GRAY(img image.Image) image.Image {
+func Grayscale(img image.Image) image.Image {
 	width := img.Bounds().Max.X
 	height := img.Bounds().Max.Y
 	grayImg := gil.NewImage(width, height)
