@@ -3,7 +3,11 @@ knn:
 
 knn-start:
 	make knn;
-	bin/knn -open=dataset/images/00_000200.png -save=save/img.png 1>tmp/log.log;
+		bin/knn \
+		--open=dataset/images/00_000200.png \
+		--save=save/img.png \
+		--label=dataset/knn-dataset/labels.csv \
+		1>tmp/log.log;
 
 knn-selection:
 	go build -o bin/knn-selection cmd/knn-selection/main.go;
@@ -29,5 +33,8 @@ kmeans:
 
 kmeans-start:
 	make kmeans;
-	bin/kmeans -open=dataset/images/00_000200.png -save=save/img.png 1>tmp/log.log;
-	# bin/kmeans -open=dataset/images/00_000200.png 1>tmp/log.log;
+	bin/kmeans \
+		--open=dataset/images/00_000200.png \
+		--save=save/img.png \
+		--label=dataset/knn-dataset/labels.csv \
+		1>tmp/log.log;

@@ -1,12 +1,10 @@
 package knn
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"sort"
 	"sync"
-	"time"
 	"urban-image-segmentation/internal/dataset/label"
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/convert"
@@ -41,8 +39,6 @@ func (k *KNN) Predict() (image.Image, error) {
 	newImg := gil.NewImage(k.width, k.height)
 	var wg sync.WaitGroup
 
-	start := time.Now()
-
 	for x := 0; x < k.width; x++ {
 		for y := 0; y < k.height; {
 
@@ -71,7 +67,6 @@ func (k *KNN) Predict() (image.Image, error) {
 		}
 	}
 
-	fmt.Println(time.Since(start))
 	return newImg, nil
 }
 
