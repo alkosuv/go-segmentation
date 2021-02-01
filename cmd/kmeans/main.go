@@ -55,7 +55,11 @@ func main() {
 	if _, err := kmeans.Predict(); err != nil {
 		logger.Fatalln(err)
 	}
-	newImg, _ := kmeans.Predict()
+
+	newImg, err := kmeans.Predict()
+	if err != nil {
+		logger.Fatalln(err)
+	}
 
 	if err := gil.SaveImage(*pathSave, newImg); err != nil {
 		logger.Fatalln(err)

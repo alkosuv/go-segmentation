@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"io"
 	"os"
-	"urban-image-segmentation/internal/gil/sys"
+	"urban-image-segmentation/internal/sys"
 
 	"github.com/gen95mis/golog"
 )
