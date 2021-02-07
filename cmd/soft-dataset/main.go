@@ -9,18 +9,18 @@ import (
 	"os"
 	"strings"
 	"urban-image-segmentation/internal/dataset/label"
+	"urban-image-segmentation/internal/dataset/softdataset"
 	"urban-image-segmentation/internal/gil"
-	"urban-image-segmentation/internal/gil/knn/storage"
 
 	"github.com/gen95mis/golog"
 )
 
 var (
-	pathImages = flag.String("pathImages", "", "path to image")
-	pathLabels = flag.String("pathLabels", "", "path to classified image")
+	pathImages = flag.String("pathImages", "", "path to images")
+	pathLabels = flag.String("pathLabels", "", "path to classified images")
 	splits     = flag.String("splits", "", "path to dataset")
 	pathSave   = flag.String("save", "", "save path to dataset")
-	pathLog    = flag.String("log", "tmp/knn_selection.log", "path to log file")
+	pathLog    = flag.String("log", "tmp/soft-dataset.log", "path to log file")
 	lvl        = flag.String("lvl", "Warn", "log level")
 	logger     *golog.Logger
 )
@@ -40,7 +40,7 @@ func init() {
 }
 
 func main() {
-	s := storage.NewStorage(logger)
+	s := softdataset.NewStorage(logger)
 
 	images, err := openDataset()
 	if err != nil {

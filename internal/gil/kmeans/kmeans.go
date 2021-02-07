@@ -1,14 +1,13 @@
 package kmeans
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"sort"
 	"urban-image-segmentation/internal/dataset/label"
+	"urban-image-segmentation/internal/dataset/softdataset"
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/convert"
-	"urban-image-segmentation/internal/gil/knn/storage"
 	"urban-image-segmentation/internal/gil/math"
 )
 
@@ -18,7 +17,7 @@ type KMeans struct {
 	height    int
 	centroids []pixel
 	count     int // count centroids
-	dataset   []storage.Label
+	dataset   []softdataset.Label
 }
 
 type pixel struct {
@@ -33,7 +32,7 @@ type dist struct {
 	dist  float64
 }
 
-func NewKMeans(img image.Image, count int, dataset []storage.Label) *KMeans {
+func NewKMeans(img image.Image, count int, dataset []softdataset.Label) *KMeans {
 	pixels := imgToPixel(img)
 
 	k := new(KMeans)
@@ -48,7 +47,7 @@ func NewKMeans(img image.Image, count int, dataset []storage.Label) *KMeans {
 }
 
 func (k *KMeans) Predict() (image.Image, error) {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 32; i++ {
 		k.evaluateCentroids()
 		k.newCentroids()
 	}
@@ -73,7 +72,7 @@ func (k *KMeans) newCentroids() {
 		buff[i] = make([]dist, 0)
 	}
 
-	color := k.avgColor()
+	color := k.avgDistance()
 
 	for i, p := range k.pixels {
 		d := dist{
@@ -101,11 +100,11 @@ func (k *KMeans) avgColor() []color.RGBA {
 	b := make([]float64, k.count)
 	count := make([]float64, k.count)
 
-	for _, k := range k.pixels {
-		r[k.centroid] += float64(k.RGBA.R)
-		g[k.centroid] += float64(k.RGBA.G)
-		b[k.centroid] += float64(k.RGBA.B)
-		count[k.centroid]++
+	for _, p := range k.pixels {
+		r[p.centroid] += float64(p.RGBA.R)
+		g[p.centroid] += float64(p.RGBA.G)
+		b[p.centroid] += float64(p.RGBA.B)
+		count[p.centroid]++
 	}
 
 	for i := 0; i < k.count; i++ {
@@ -113,6 +112,37 @@ func (k *KMeans) avgColor() []color.RGBA {
 		c.R = uint8(r[i] / count[i])
 		c.G = uint8(g[i] / count[i])
 		c.B = uint8(b[i] / count[i])
+		result = append(result, c)
+	}
+
+	return result
+}
+
+func (k *KMeans) avgDistance() []color.RGBA {
+	result := make([]color.RGBA, 0, k.count)
+	x := make([]int, k.count)
+	y := make([]int, k.count)
+	count := make([]int, k.count)
+
+	for _, p := range k.pixels {
+		x[p.centroid] += p.x
+		y[p.centroid] += p.y
+		count[p.centroid]++
+	}
+
+	for i := 0; i < k.count; i++ {
+		var c color.RGBA
+
+		if x[i] == 0 || y[i] == 0 {
+			c = k.centroids[i].RGBA
+			result = append(result, c)
+			continue
+		}
+
+		x0 := x[i] / count[i]
+		y0 := y[i] / count[i]
+
+		c = k.pixels[(x0*y0)+y0].RGBA
 		result = append(result, c)
 	}
 
@@ -156,7 +186,6 @@ func (k *KMeans) centroidsPredict() {
 		l := k.freqLabels(distance)
 
 		k.centroids[i].RGBA = label.Color[l]
-		fmt.Println(k.centroids[i].RGBA)
 	}
 }
 

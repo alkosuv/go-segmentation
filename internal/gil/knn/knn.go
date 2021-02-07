@@ -6,9 +6,9 @@ import (
 	"sort"
 	"sync"
 	"urban-image-segmentation/internal/dataset/label"
+	"urban-image-segmentation/internal/dataset/softdataset"
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/convert"
-	"urban-image-segmentation/internal/gil/knn/storage"
 	"urban-image-segmentation/internal/gil/math"
 )
 
@@ -16,7 +16,7 @@ type KNN struct {
 	img    image.Image
 	width  int
 	height int
-	labels *[]storage.Label
+	labels *[]softdataset.Label
 }
 
 type distanceLabel struct {
@@ -24,7 +24,7 @@ type distanceLabel struct {
 	index int
 }
 
-func NewKNN(img image.Image, labels *[]storage.Label) *KNN {
+func NewKNN(img image.Image, labels *[]softdataset.Label) *KNN {
 	k := new(KNN)
 
 	k.width = img.Bounds().Max.X
