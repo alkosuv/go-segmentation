@@ -4,8 +4,6 @@ import (
 	"image"
 	"image/color"
 	"sort"
-	"urban-image-segmentation/internal/dataset/label"
-	"urban-image-segmentation/internal/dataset/softdataset"
 	"urban-image-segmentation/internal/gil"
 	"urban-image-segmentation/internal/gil/convert"
 	"urban-image-segmentation/internal/gil/math"
@@ -17,7 +15,7 @@ type KMeans struct {
 	height    int
 	centroids []pixel
 	count     int // count centroids
-	dataset   []softdataset.Label
+	imgLabel  image.Image
 }
 
 type pixel struct {
@@ -32,24 +30,28 @@ type dist struct {
 	dist  float64
 }
 
-func NewKMeans(img image.Image, count int, dataset []softdataset.Label) *KMeans {
-	pixels := imgToPixel(img)
+func NewKMeans(img image.Image, count int, imgLabel image.Image) *KMeans {
+	pixels := imgToPixel(convert.Grayscale(img))
 
 	k := new(KMeans)
 	k.width = img.Bounds().Max.X
 	k.height = img.Bounds().Max.Y
 	k.centroids = genCentroid(pixels, count)
-	k.dataset = dataset
+	k.imgLabel = imgLabel
 	k.count = count
 	k.pixels = pixels
 
 	return k
 }
 
-func (k *KMeans) Predict() (image.Image, error) {
+func (k *KMeans) Predict(isDraw bool) (image.Image, error) {
 	for i := 0; i < 32; i++ {
 		k.evaluateCentroids()
 		k.newCentroids()
+	}
+
+	if isDraw {
+		return k.imageColor(), nil
 	}
 	return k.image(), nil
 }
@@ -152,8 +154,6 @@ func (k *KMeans) avgDistance() []color.RGBA {
 func (k *KMeans) image() image.Image {
 	img := gil.NewImage(k.width, k.height)
 
-	k.centroidsPredict()
-
 	for _, p := range k.pixels {
 		c := color.RGBA{
 			R: k.centroids[p.centroid].RGBA.R,
@@ -167,43 +167,16 @@ func (k *KMeans) image() image.Image {
 	return img
 }
 
-func (k *KMeans) centroidsPredict() {
-	const count = 8
+func (k *KMeans) imageColor() image.Image {
+	img := gil.NewImage(k.width, k.height)
 
-	for i := 0; i < k.count; i++ {
-		distance := make([]dist, 0, len(k.dataset))
-		for _, l := range k.dataset {
-			d := dist{
-				index: l.Index,
-				dist:  math.EuclideanDistance(k.centroids[i].RGBA, l.RGBA),
-			}
-
-			distance = append(distance, d)
-		}
-
-		sort.Slice(distance, func(i, j int) bool { return distance[i].dist < distance[j].dist })
-		distance = distance[:1000]
-		l := k.freqLabels(distance)
-
-		k.centroids[i].RGBA = label.Color[l]
-	}
-}
-
-func (k *KMeans) freqLabels(distance []dist) int {
-	freq := make([]int, len(label.Labels))
-
-	for _, d := range distance {
-		freq[d.index]++
+	for _, p := range k.pixels {
+		x := k.centroids[p.centroid].x
+		y := k.centroids[p.centroid].y
+		img.(*image.RGBA).Set(p.x, p.y, k.imgLabel.At(x, y))
 	}
 
-	index := 0
-	for i, v := range freq {
-		if v > freq[index] {
-			index = i
-		}
-	}
-
-	return index
+	return img
 }
 
 func imgToPixel(img image.Image) []pixel {
@@ -234,7 +207,7 @@ func genCentroid(pixels []pixel, count int) []pixel {
 	step := size / count
 
 	index := 0
-	for i := step; i < size; i += step {
+	for i := 0; index < count; i += step {
 		p := pixel{
 			x:        pixels[i].x,
 			y:        pixels[i].y,

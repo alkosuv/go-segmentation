@@ -14,8 +14,10 @@ kmeans:
 kmeans-start:
 	go run cmd/kmeans/main.go \
 		--open=dataset/images/00_000200.png \
+		--label=dataset/labels/00_000200.png \
 		--save=save/img.png \
-		--label=dataset/soft-dataset/labels.csv \
+		--centroid=8 \
+		--draw=true \
 		1>tmp/log.log;
 
 hmrf:
